@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>GMod Cloud: Mobile Fixed</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <style>
+        body { margin: 0; overflow: hidden; background: #000; font-family: 'Segoe UI', sans-serif; touch-action: none; color: white; }
+        
+        /* Menu Background */
+        #login { 
+            position: absolute; inset: 0; 
+            background: linear-gradient(rgba(0,0,0,0.8), rgba(0,0,0,0.8)), url('https://images-wixmp-ed30a86b8c4ca887773594c2.wixmp.com/f/a87b2362-b3c1-47f1-9d23-d01cad4e6f0e/d260w6h-0934f99f-cf83-4800-9778-c23b82280095.png/v1/fill/w_400,h_400/garry_s_mod_icon_by_finek_d260w6h-fullview.png?token=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ1cm46YXBwOjdlMGQxODg5ODIyNjQzNzNhNWYwZDQxNWVhMGQyNmUwIiwiaXNzIjoidXJuOmFwcDo3ZTBkMTg4OTgyMjY0MzczYTVmMGQ0MTVlYTBkMjZlMCIsIm9iaiI6W1t7ImhlaWdodCI6Ijw9NDAwIiwicGF0aCI6IlwvZlwvYTg3YjIzNjItYjNjMS00N2YxLTlkMjMtZDAxY2FkNGU2ZjBlXC9kMjYwdzZoLTA5MzRmOTlmLWNmODMtNDgwMC05Nzc4LWMyM2I4MjI4MDA5NS5wbmciLCJ3aWR0aCI6Ijw9NDAwIn1dXSwiYXVkIjpbInVybjpzZXJ2aWNlOmltYWdlLm9wZXJhdGlvbnMiXX0.VImFLygGwCZ-x4bixwPD43Yl7pjpnQ1D2uXpYd0y4pg');
+            background-size: cover; background-position: center;
+            display: flex; align-items: center; justify-content: center; z-index: 2000; 
+        }
+        .config-box { background: rgba(0,0,0,0.95); padding: 30px; border-radius: 10px; border: 2px solid #00f2ff; text-align: center; }
+        
+        .toggle-btn { margin: 5px; padding: 10px; border: 1px solid #555; background: #222; color: #fff; cursor: pointer; border-radius: 5px; }
+        .toggle-btn.active { border-color: #00f2ff; background: rgba(0, 242, 255, 0.2); }
+        #spawn-btn { background: #00f2ff; color: #000; font-weight: bold; width: 100%; margin-top: 15px; border: none; padding: 12px; cursor: pointer; }
+
+        /* FIXED MOBILE OVERLAY */
+        #mobile-overlay { display: none; position: absolute; inset: 0; z-index: 100; pointer-events: none; }
+        .touchable { pointer-events: auto; }
+
+        #joystick-base { position: absolute; bottom: 40px; left: 40px; width: 130px; height: 130px; background: rgba(255,255,255,0.1); border: 2px solid rgba(255,255,255,0.5); border-radius: 50%; }
+        #joystick-stick { position: absolute; top: 40px; left: 40px; width: 50px; height: 50px; background: #fff; border-radius: 50%; box-shadow: 0 0 10px rgba(0,0,0,0.5); }
+        
+        #m-jump-btn { position: absolute; bottom: 40px; right: 40px; width: 90px; height: 90px; background: rgba(0,0,0,0.6); border: 3px solid #00f2ff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; color: #00f2ff; font-size: 18px; }
+        #m-addon-btn { position: absolute; top: 15px; right: 15px; width: 60px; height: 60px; background: #00f2ff; color: #000; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 24px; }
+
+        #addon-menu { display: none; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(0,0,0,0.95); padding: 25px; border: 2px solid #00f2ff; text-align: center; z-index: 3000; pointer-events: auto; }
+        .bot-choice { padding: 15px; background: #333; margin: 5px; cursor: pointer; border-radius: 8px; border: 1px solid #555; }
+
+        #death-screen { display: none; position: absolute; inset: 0; background: rgba(139, 0, 0, 0.8); z-index: 5000; align-items: center; justify-content: center; flex-direction: column; pointer-events: auto; }
+    </style>
+</head>
+<body>
+
+<div id="login">
+    <div class="config-box">
+        <h2 style="color:#00f2ff; margin-bottom: 10px;">GMOD CLOUD</h2>
+        <input type="text" id="username" placeholder="NAME..." style="padding:10px; width:180px; margin-bottom:15px; text-align:center;">
+        <div>
+            <button class="toggle-btn" id="mob-off" onclick="setMobile(false)">Enable mobile - Not enabled ):</button>
+            <button class="toggle-btn" id="mob-on" onclick="setMobile(true)">Enable mobile - ENABLED</button>
+        </div>
+        <button id="spawn-btn">SPAWN</button>
+    </div>
+</div>
+
+<div id="death-screen">
+    <h1>WASTED</h1>
+    <button onclick="respawn()" style="padding:15px 40px; font-weight:bold;">RESPAWN</button>
+</div>
+
+<div id="mobile-overlay">
+    <div id="joystick-base" class="touchable">
+        <div id="joystick-stick"></div>
+    </div>
+    <div id="m-jump-btn" class="touchable">JUMP</div>
+    <div id="m-addon-btn" class="touchable" onclick="openAddons()">E</div>
+</div>
+
+<div id="addon-menu">
+    <h3 style="margin-top:0;">SPAWN MENU</h3>
+    <div class="bot-choice" onclick="spawnBot('Sanic')">SANIC</div>
+    <div class="bot-choice" onclick="spawnBot('Bean')">BEAN</div>
+    <button onclick="document.getElementById('addon-menu').style.display='none'" style="margin-top:10px;">CLOSE</button>
+</div>
+
+<script type="importmap">
+    { "imports": {
+        "three": "https://unpkg.com/three@0.150.1/build/three.module.js",
+        "firebase/app": "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js",
+        "firebase/database": "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js"
+    }}
+</script>
+
+<script type="module">
+import * as THREE from 'three';
+import { initializeApp } from "firebase/app";
+import { getDatabase, ref, set, push, onChildAdded, onValue, onDisconnect, update, serverTimestamp } from "firebase/database";
+
+const config = { apiKey: "AIzaSyBEVe73T5q0V8Qnp6kK0mL_2K2KMLhh6B8", databaseURL: "https://youvshomer-90eb3-default-rtdb.firebaseio.com", projectId: "youvshomer-90eb3" };
+const app = initializeApp(config);
+const db = getDatabase(app);
+const myId = "P_" + Math.random().toString(36).substr(2, 6);
+const myColor = Math.random() * 0xffffff;
+
+let mobileEnabled = false;
+window.setMobile = (val) => {
+    mobileEnabled = val;
+    document.getElementById('mob-on').classList.toggle('active', val);
+    document.getElementById('mob-off').classList.toggle('active', !val);
+};
+
+/** ENGINE **/
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x87ceeb);
+const camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1500);
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setSize(window.innerWidth, window.innerHeight);
+document.body.appendChild(renderer.domElement);
+
+const loader = new THREE.TextureLoader();
+const grassTex = loader.load('https://threejs.org/examples/textures/terrain/grasslight-big.jpg');
+grassTex.wrapS = grassTex.wrapT = THREE.RepeatWrapping; grassTex.repeat.set(100, 100);
+const floor = new THREE.Mesh(new THREE.PlaneGeometry(2000, 2000), new THREE.MeshStandardMaterial({map: grassTex}));
+floor.rotation.x = -Math.PI/2;
+scene.add(floor, new THREE.AmbientLight(0xffffff, 0.8));
+
+// Brick Building
+const brickMat = new THREE.MeshStandardMaterial({color: 0x8b4513});
+const b1 = new THREE.Mesh(new THREE.BoxGeometry(100, 80, 20), brickMat); b1.position.set(-60, 40, 0);
+const b2 = new THREE.Mesh(new THREE.BoxGeometry(100, 80, 20), brickMat); b2.position.set(60, 40, 0);
+const b3 = new THREE.Mesh(new THREE.BoxGeometry(250, 5, 200), new THREE.MeshStandardMaterial({color: 0x888888})); b3.position.set(0, 80, 0);
+scene.add(b1, b2, b3);
+
+/** PLAYER **/
+class Humanoid extends THREE.Group {
+    constructor(c) {
+        super();
+        const mat = new THREE.MeshStandardMaterial({ color: c });
+        this.body = new THREE.Mesh(new THREE.BoxGeometry(0.6, 1.2, 0.4), mat); this.body.position.y = 1.2;
+        this.head = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.5, 0.5), mat); this.head.position.y = 2.0;
+        this.add(this.body, this.head);
+    }
+}
+
+let myHuman, isDead = false, isFlying = false, lastJump = 0;
+let move = {f:0, b:0, l:0, r:0}, velY = 0, pitch = 0, yaw = 0;
+const remotes = {}, bots = {};
+
+document.getElementById('spawn-btn').onclick = () => {
+    document.getElementById('login').style.display = 'none';
+    if(mobileEnabled) document.getElementById('mobile-overlay').style.display = 'block';
+    
+    myHuman = new Humanoid(myColor); scene.add(myHuman);
+    camera.position.set(0, 5, 15);
+    
+    onDisconnect(ref(db, `v11/players/${myId}`)).remove();
+    onValue(ref(db, 'v11/players'), snap => {
+        const data = snap.val() || {};
+        Object.keys(data).forEach(id => {
+            if(id === myId) return;
+            if(!remotes[id]) { remotes[id] = new Humanoid(data[id].c); scene.add(remotes[id]); }
+            remotes[id].position.lerp(new THREE.Vector3(data[id].x, data[id].y, data[id].z), 0.2);
+        });
+    });
+    loop();
+};
+
+/** FIXED MOBILE INPUTS **/
+let joy = {x:0, y:0}, lastTouch = null;
+
+// Joystick Logic
+const joyBase = document.getElementById('joystick-base');
+const joyStick = document.getElementById('joystick-stick');
+
+joyBase.addEventListener('touchstart', (e) => handleJoy(e), {passive: false});
+joyBase.addEventListener('touchmove', (e) => {
+    e.preventDefault();
+    handleJoy(e);
+}, {passive: false});
+joyBase.addEventListener('touchend', () => {
+    joy = {x:0, y:0};
+    joyStick.style.transform = `translate(0,0)`;
+}, {passive: false});
+
+function handleJoy(e) {
+    const r = joyBase.getBoundingClientRect();
+    const t = e.touches[0];
+    const centerX = r.left + r.width / 2;
+    const centerY = r.top + r.height / 2;
+    joy.x = (t.clientX - centerX) / (r.width / 2);
+    joy.y = (t.clientY - centerY) / (r.height / 2);
+    const d = Math.sqrt(joy.x*joy.x + joy.y*joy.y);
+    if(d > 1) { joy.x /= d; joy.y /= d; }
+    joyStick.style.transform = `translate(${joy.x*40}px, ${joy.y*40}px)`;
+}
+
+// Jump Logic
+document.getElementById('m-jump-btn').addEventListener('touchstart', (e) => {
+    e.preventDefault();
+    handleJump();
+}, {passive: false});
+
+// Look Logic (Touch elsewhere)
+window.addEventListener('touchstart', (e) => {
+    if(e.target.closest('.touchable')) return;
+    lastTouch = {x: e.touches[0].clientX, y: e.touches[0].clientY};
+}, {passive: false});
+
+window.addEventListener('touchmove', (e) => {
+    if(e.target.closest('.touchable')) return;
+    const t = e.touches[0];
+    if(lastTouch) {
+        yaw -= (t.clientX - lastTouch.x) * 0.006;
+        pitch = Math.max(-1.5, Math.min(1.5, pitch - (t.clientY - lastTouch.y) * 0.006));
+        lastTouch = {x: t.clientX, y: t.clientY};
+    }
+}, {passive: false});
+
+/** STANDARD INPUTS **/
+function handleJump() {
+    const now = Date.now();
+    if(now - lastJump < 300) isFlying = !isFlying;
+    else if(!isFlying && velY === 0) velY = 0.35;
+    lastJump = now;
+}
+window.handleJump = handleJump;
+window.openAddons = () => document.getElementById('addon-menu').style.display = 'block';
+
+window.addEventListener('keydown', e => {
+    const k = e.key.toLowerCase();
+    if(k === 'w') move.f = 1; if(k === 's') move.b = 1;
+    if(k === 'a') move.l = 1; if(k === 'd') move.r = 1;
+    if(k === ' ') handleJump();
+    if(k === 'e') openAddons();
+});
+window.addEventListener('keyup', e => {
+    const k = e.key.toLowerCase();
+    if(k === 'w') move.f = 0; if(k === 's') move.b = 0;
+    if(k === 'a') move.l = 0; if(k === 'd') move.r = 0;
+});
+window.addEventListener('mousemove', e => {
+    if(document.pointerLockElement) {
+        yaw -= e.movementX * 0.002;
+        pitch = Math.max(-1.5, Math.min(1.5, pitch - e.movementY * 0.002));
+    }
+});
+renderer.domElement.onclick = () => { if(!mobileEnabled && !isDead) renderer.domElement.requestPointerLock(); };
+
+function loop() {
+    requestAnimationFrame(loop);
+    if(!myHuman || isDead) return;
+
+    camera.rotation.set(pitch, yaw, 0, 'YXZ');
+    const mx = mobileEnabled ? -joy.x : (move.r - move.l);
+    const mz = mobileEnabled ? -joy.y : (move.b - move.f);
+    
+    camera.translateX(mx * 0.2);
+    camera.translateZ(mz * 0.2);
+
+    if(isFlying) {
+        if(mz > 0.4 || move.f) camera.translateZ(-0.4);
+    } else {
+        camera.position.y += velY;
+        velY -= 0.015;
+        if(camera.position.y < 2.5) { camera.position.y = 2.5; velY = 0; }
+    }
+
+    myHuman.position.set(camera.position.x, camera.position.y - 1.8, camera.position.z);
+    myHuman.rotation.y = yaw;
+
+    update(ref(db, `v11/players/${myId}`), { x: camera.position.x, y: camera.position.y, z: camera.position.z, ry: yaw, c: myColor });
+    renderer.render(scene, camera);
+}
+window.spawnBot = (t) => { push(ref(db, 'v11/bots'), { type: t, x: camera.position.x, z: camera.position.z - 15 }); document.getElementById('addon-menu').style.display='none'; };
+window.respawn = () => { isDead = false; document.getElementById('death-screen').style.display='none'; camera.position.set(0,5,15); };
+</script>
+</body>
+</html>
